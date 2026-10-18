@@ -34,6 +34,6 @@ function tick(){const elapsed=performance.now()-startedAt;const distance=Number(
 function start(){if(running)return;const bet=Number($('bet').value);if(!Number.isSafeInteger(bet)||bet<1||bet>balance){alert('所持コイン以内で、1以上の整数を入力してください');return}balance-=bet;save();$('bet').dataset.currentBet=bet;init();running=true;$('start').disabled=true;$('distance').disabled=true;document.querySelectorAll('input[name=pick]').forEach(e=>e.disabled=true);$('status').textContent='スタート準備中…';const myEpoch=++epoch;let n=3;log('出走準備！ '+$('distance').value+'mレース。個性豊かな5頭が集結！');beep(550);const countdown=setInterval(()=>{if(myEpoch!==epoch){clearInterval(countdown);return}if(n>0){$('status').textContent='スタートまで '+n+'！';beep(500+n*100);n--}else{clearInterval(countdown);$('status').textContent='🔥 レース開始！';log('スタート！ 全5頭が飛び出した！',true);beep(1000,.3);startedAt=performance.now();previousLeader=-1;interval=setInterval(tick,75)}},650)}
 $('start').addEventListener('click',start);$('again').addEventListener('click',()=>{if(running){alert('レースが終わるまでお待ちください');return}init();log('新しいレースを準備しました')});$('reset').addEventListener('click',()=>{if(running)return;if(confirm('所持コインを10,000 Cに戻しますか？')){balance=10000;save()}});init();log('カオス競馬DXへようこそ！');
 </script>
-<script src="../back-button.js"></script>
+<script src="../../back-button.js"></script>
 </body></html>
 
