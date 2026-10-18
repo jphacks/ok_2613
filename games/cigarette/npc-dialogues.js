@@ -1,3 +1,4 @@
+import {createNewCharacters} from './new-characters.js';
 import {addPersonalDialogues,PERSONAL_CHAPTERS} from './personal-dialogues.js';
 /** Authored fiction. Strangers meet in a smoking area at night. */
 export const CHARACTERS = [
@@ -134,11 +135,12 @@ const CONTINUATIONS={
  mina:{joke:'fan',same:'day',kind:'meeting',enemy:'outside',weather:'quiet',slow:'closing',real:'laugh',outside:'closing',tomorrow:'closing',laugh:'closing',name:'closing',quiet:'closing',closing:'end',words:'tomorrow',reunion:'reunionTalk',third:'thirdTalk',returned:'reunionTalk'}
 };
 addPersonalDialogues(CHARACTERS);
+CHARACTERS.push(...createNewCharacters());
 for(const person of CHARACTERS){
  for(const [id,next]of Object.entries(CONTINUATIONS[person.id]||{}))Object.assign(person.nodes[id],{next,choices:[]});
  // Keep only scenes used by these quieter routes; all five chapter entries remain available.
  const reachable=new Set();
  function walk(id){if(reachable.has(id))return;reachable.add(id);const node=person.nodes[id];if(node.next)walk(node.next);for(const [,next]of node.choices)walk(next);}
- for(const entry of ['hello','reunion','third','letter','returned',...PERSONAL_CHAPTERS,...(person.id==='mina'?['friendEpilogue']:[])])walk(entry);
+ for(const entry of ['hello','reunion','third','letter','returned',...PERSONAL_CHAPTERS,...(['mina','riko'].includes(person.id)?['friendEpilogue']:[])])walk(entry);
  for(const id of Object.keys(person.nodes))if(!reachable.has(id))delete person.nodes[id];
 }
