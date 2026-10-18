@@ -1,1 +1,53 @@
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROYAL FRUIT SLOTS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(#24345b,#080b19);display:grid;place-items:center;font-family:Arial,'Hiragino Kaku Gothic ProN',sans-serif;color:#fff;padding:8px}.machine{position:relative;width:min(100%,1683px);aspect-ratio:1683/935;background:url('casino.png') center/100% 100% no-repeat;container-type:inline-size;overflow:hidden;user-select:none;box-shadow:0 15px 55px #0009}.reel{position:absolute;top:39.3%;height:37.7%;width:11.55%;display:grid;grid-template-rows:repeat(3,1fr);gap:0;background:#fff7e3;border:0.25cqw solid #c89a3a;border-radius:1.1cqw;overflow:hidden;box-shadow:inset 0 0 2cqw #96744288}.reel[data-i="0"]{left:30.8%}.reel[data-i="1"]{left:43.35%}.reel[data-i="2"]{left:55.95%}.symbol{display:grid;place-items:center;font-size:5.8cqw;line-height:1;background:linear-gradient(110deg,#e8d8ae,#fffdf2 25%,#fffdf6 72%,#d9bf8c);border-bottom:.15cqw solid #a9874f;text-shadow:0 .18cqw .16cqw #0002}.symbol:last-child{border-bottom:0}.symbol .seven-art{display:block;width:90%;height:85%;object-fit:contain;filter:drop-shadow(0 .12cqw .15cqw #5c270055)}.reel.running .symbol{filter:blur(.12cqw)}.reel.winning .symbol.hit{background:linear-gradient(120deg,#fff2a8,#fff9df,#ffd75d);animation:glow .55s infinite alternate}@keyframes glow{to{filter:brightness(1.2);box-shadow:inset 0 0 2cqw #ffb800}}.hotspot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;touch-action:manipulation}.hotspot:focus-visible{outline:.35cqw solid #fff;outline-offset:.1cqw}.hotspot:active:not(:disabled){background:#ffffff40;transform:scale(.94)}.hotspot:disabled{cursor:default}.spin{left:13.9%;top:68.5%;width:10.3%;height:17%;border-radius:50%}.stop{top:79.4%;width:7.5%;height:11.6%;border-radius:50%;background:#0af2}.stop[data-i="0"]{left:33.35%}.stop[data-i="1"]{left:45.9%}.stop[data-i="2"]{left:58.4%}.stop:disabled{background:transparent}.bet{left:16.45%;width:6.1%;height:5.9%;border-radius:50%}.bet[data-bet="3"]{top:46.9%}.bet[data-bet="30"]{top:52.9%}.bet[data-bet="100"]{top:59%}.bet.selected{box-shadow:0 0 0 .4cqw #fff8a8,0 0 2cqw #fff;animation:pulse 1.1s infinite alternate}@keyframes pulse{to{box-shadow:0 0 0 .22cqw #fff8a8,0 0 .6cqw #fff}}.counter{position:absolute;left:76.3%;width:8%;height:5.3%;display:grid;place-items:center;font-size:2.35cqw;font-weight:900;color:#ffe27e;text-shadow:0 .15cqw .25cqw #000;background:linear-gradient(#271409,#120b07);border-radius:.4cqw;pointer-events:none}.coins{top:63.6%}.win{top:76.3%}.message{position:absolute;top:93%;left:23%;width:54%;text-align:center;font-size:1.55cqw;font-weight:900;color:#fff6c9;text-shadow:0 .2cqw .5cqw #000,0 0 1cqw #000}.banner{position:absolute;inset:0;background:#05011ac4;display:none;place-items:center;pointer-events:none}.banner.show{display:grid}.banner strong{font-size:8cqw;color:#ffed78;text-shadow:0 0 2cqw #ff8500,0 0 5cqw #ffb900;animation:pop .45s infinite alternate}@keyframes pop{to{transform:scale(1.1)}}.controls{max-width:1100px;margin:12px auto 0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.controls button{border:1px solid #b18c45;border-radius:10px;background:#272045;color:#ffdf89;padding:10px 15px;cursor:pointer;font-weight:700}.controls button:disabled{opacity:.5}.hint{font-size:13px;color:#c8c4d6;text-align:center;margin:8px auto 0;line-height:1.6}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<main style="width:min(100%,1683px)">
+<div class="machine" id="machine" aria-label="3列3段のファンタジースロット">
+<div id="reels"></div>
+<button class="hotspot spin" id="spin" aria-label="SPIN 回転開始" title="SPIN"></button>
+<button class="hotspot stop" data-i="0" aria-label="左リール停止" title="STOP 1" disabled></button>
+<button class="hotspot stop" data-i="1" aria-label="中央リール停止" title="STOP 2" disabled></button>
+<button class="hotspot stop" data-i="2" aria-label="右リール停止" title="STOP 3" disabled></button>
+<button class="hotspot bet selected" data-bet="3" aria-label="BET 3" title="BET 3"></button>
+<button class="hotspot bet" data-bet="30" aria-label="BET 30" title="BET 30"></button>
+<button class="hotspot bet" data-bet="100" aria-label="BET 100" title="BET 100"></button>
+<div class="counter coins" id="coins">10000</div><div class="counter win" id="win">0</div>
+<div class="message" id="message" aria-live="polite">BETを選んでSPIN！</div>
+<div class="banner" id="banner"><strong id="bannerText">BIG WIN!</strong></div>
+</div>
+<div class="controls"><button id="reset">↻ コインをリセット</button><button id="soundToggle">🔊 効果音 ON</button></div>
+<p class="hint">画像内の赤いSPINで回転 → 青いボタン3つで停止。キーボード：SpaceでSPIN / 1・2・3で停止。<br>当たりは横3ライン＋斜め2ライン。🍎×3=3倍、🍇×3=5倍、🍒×3=8倍、🔔×3=15倍、💎×3=30倍、豪華な7×3=100倍＋ボーナス。ゲーム内コインのみ。</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const TYPES=['🍎','🍇','🍒','🔔','💎','7️⃣'];
+const WEIGHTS=[28,25,20,14,9,4];
+const MULT={'🍎':3,'🍇':5,'🍒':8,'🔔':15,'💎':30,'7️⃣':100};
+const LINES=[[[0,0],[1,0],[2,0]],[[0,1],[1,1],[2,1]],[[0,2],[1,2],[2,2]],[[0,0],[1,1],[2,2]],[[0,2],[1,1],[2,0]]];
+let coins=10000,bet=3,win=0,spinning=false,stopped=[true,true,true],timers=[null,null,null],soundOn=true,ctx;
+let grid=[['🍎','🍇','🔔'],['7️⃣','🔔','🍒'],['💎','🍒','🍎']];
+const reelNodes=[];
+for(let c=0;c<3;c++){
+ const reel=document.createElement('div');reel.className='reel';reel.dataset.i=c;
+ for(let r=0;r<3;r++){const cell=document.createElement('div');cell.className='symbol';reel.appendChild(cell)}
+ $('reels').appendChild(reel);reelNodes.push(reel);
+}
+function pick(){let n=Math.random()*WEIGHTS.reduce((a,b)=>a+b,0);for(let i=0;i<TYPES.length;i++){n-=WEIGHTS[i];if(n<0)return TYPES[i]}return TYPES[0]}
+function draw(highlights=[]){for(let c=0;c<3;c++){reelNodes[c].classList.toggle('running',!stopped[c]);reelNodes[c].classList.toggle('winning',highlights.length>0);for(let r=0;r<3;r++){const cell=reelNodes[c].children[r];if(grid[c][r]==='7️⃣'){if(!cell.querySelector('img')){cell.replaceChildren();const img=document.createElement('img');img.src='gold-seven.png';img.alt='7';img.className='seven-art';cell.appendChild(img)}}else if(cell.textContent!==grid[c][r]){cell.textContent=grid[c][r]}cell.classList.toggle('hit',highlights.some(([x,y])=>x===c&&y===r))}}}
+function update(){ $('coins').textContent=coins.toLocaleString('ja-JP');$('win').textContent=win.toLocaleString('ja-JP');$('spin').disabled=spinning;document.querySelectorAll('.stop').forEach((b,i)=>b.disabled=!spinning||stopped[i]);document.querySelectorAll('.bet').forEach(b=>{b.disabled=spinning;b.classList.toggle('selected',Number(b.dataset.bet)===bet)});$('reset').disabled=spinning }
+function tone(freq=440,dur=.1){if(!soundOn)return;try{ctx??=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=freq;g.gain.setValueAtTime(.065,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+dur);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur)}catch(e){}}
+function start(){if(spinning)return;if(coins<bet){$('message').textContent='コイン不足！リセットしてください';return}coins-=bet;win=0;spinning=true;stopped=[false,false,false];$('message').textContent='青いボタンでリールを止めよう！';for(let c=0;c<3;c++){clearInterval(timers[c]);timers[c]=setInterval(()=>{grid[c]=[pick(),pick(),pick()];draw()},75)}draw();update();tone(650,.18)}
+function stop(i){if(!spinning||stopped[i])return;clearInterval(timers[i]);timers[i]=null;stopped[i]=true;draw();update();tone(270+i*120,.15);if(stopped.every(Boolean))finish()}
+function finish(){let total=0,highlight=[],seven=false;for(const line of LINES){const first=grid[line[0][0]][line[0][1]];if(line.every(([c,r])=>grid[c][r]===first)){total+=bet*MULT[first];highlight.push(...line);if(first==='7️⃣')seven=true}}if(seven)total+=1000;coins+=total;win=total;spinning=false;draw(highlight);update();if(seven){$('message').textContent='👑 777 BONUS!! +'+total.toLocaleString();celebrate('777 BONUS!!')}else if(total>=bet*15){$('message').textContent='✨ BIG WIN! +'+total.toLocaleString();celebrate('BIG WIN!')}else if(total){$('message').textContent='🎉 WIN! +'+total.toLocaleString();tone(880,.3)}else{$('message').textContent='残念！もう一度チャレンジ！'}}
+let bannerTimer;function celebrate(t){$('bannerText').textContent=t;$('banner').classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>$('banner').classList.remove('show'),1400);[600,750,900,1100].forEach((f,i)=>setTimeout(()=>tone(f,.18),i*140))}
+$('spin').addEventListener('click',start);document.querySelectorAll('.stop').forEach((b,i)=>b.addEventListener('click',()=>stop(i)));document.querySelectorAll('.bet').forEach(b=>b.addEventListener('click',()=>{if(spinning)return;bet=Number(b.dataset.bet);$('message').textContent='BET '+bet+' を選択';tone(500,.08);update()}));$('reset').addEventListener('click',()=>{if(spinning)return;coins=10000;win=0;$('message').textContent='コインをリセットしました';update()});$('soundToggle').addEventListener('click',()=>{soundOn=!soundOn;$('soundToggle').textContent=soundOn?'🔊 効果音 ON':'🔇 効果音 OFF'});document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();if(!e.repeat)start()}else if(/^Digit[123]$/.test(e.code)&&!e.repeat)stop(Number(e.code.slice(-1))-1)});draw();update();
+</script>
+</body></html>
