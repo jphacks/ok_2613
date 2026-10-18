@@ -1,1 +1,493 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>タイトルを入力</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Dela+Gothic+One&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --win-bg: rgba(10, 12, 40, 0.88);
+    --win-border: #fff;
+    --text: #fff;
+    --accent: #ffd34d;
+    --danger: #ff4d6d;
+    --neon: #c04dff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+  body {
+    font-family: "DotGothic16", monospace;
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    user-select: none;
+  }
 
+  /* RPGツクールMV相当の解像度で作り、画面サイズに合わせて拡縮 */
+  #game {
+    position: relative;
+    width: 816px; height: 624px; flex-shrink: 0;
+    background: #000;
+    overflow: hidden;
+    transform-origin: center center;
+    image-rendering: pixelated;
+  }
+  .scene { position: absolute; inset: 0; display: none; }
+  .scene.active { display: block; }
+
+  /* ---- 共通ウィンドウ（ツクール風） ---- */
+  .window {
+    position: absolute;
+    background: var(--win-bg);
+    border: 3px solid var(--win-border);
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #000, inset 0 0 0 2px #3b3f8f;
+    padding: 16px 22px;
+    font-size: 24px;
+    line-height: 1.6;
+  }
+
+  /* ---- 背景 ---- */
+  .bg-town {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 110%, rgba(192,77,255,.45), transparent 60%),
+      linear-gradient(#07041a 0%, #1b0b3a 55%, #2a0f2f 100%);
+  }
+  .bg-town::after { /* ネオン街のシルエット */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+    background:
+      linear-gradient(to top, #050308 0 30%, transparent 30%),
+      repeating-linear-gradient(90deg, #0d0717 0 60px, #120a20 60px 95px, #0a0612 95px 150px);
+    clip-path: polygon(0 40%,8% 40%,8% 15%,16% 15%,16% 30%,24% 30%,24% 5%,33% 5%,33% 35%,41% 35%,41% 20%,52% 20%,52% 0,60% 0,60% 28%,70% 28%,70% 12%,79% 12%,79% 32%,88% 32%,88% 18%,100% 18%,100% 100%,0 100%);
+  }
+
+  /* ---- タイトル ---- */
+  /* タイトル画面だけはドット調にせず、なめらかなフォントで表示 */
+  #title, #title .window { font-family: "Noto Sans JP", sans-serif; }
+  #title .choice { padding-left: 40px; }
+  #title .choice.selected::before { left: 10px; }
+  #title .logo {
+    position: absolute; top: 120px; width: 100%; text-align: center;
+  }
+  #title .logo h1 {
+    font-family: "Dela Gothic One", sans-serif;
+    font-size: 96px; font-weight: normal; letter-spacing: 10px; margin-top: 8px;
+    color: #fff; text-shadow: 0 0 10px var(--neon), 0 0 30px var(--neon), 4px 4px 0 #000;
+  }
+  #title .logo .catch { font-size: 22px; color: var(--accent); margin-top: 6px; }
+  #title .menu { left: 50%; top: 400px; transform: translateX(-50%); width: 280px; text-align: left; }
+  #title .press { position: absolute; bottom: 30px; width: 100%; text-align: center; font-size: 16px; color: #888; }
+
+  /* ---- 選択肢・カーソル ---- */
+  .choice { padding-left: 32px; position: relative; cursor: pointer; border-radius: 4px; }
+  .choice.selected { background: rgba(255,255,255,.12); }
+  .choice.selected::before {
+    content: "▶"; position: absolute; left: 6px; color: var(--accent);
+    animation: blink-x .6s steps(2) infinite;
+  }
+  @keyframes blink-x { 50% { transform: translateX(4px); } }
+
+  /* ---- 名前入力 ---- */
+  #name .prompt { left: 40px; right: 40px; top: 60px; }
+  #name .face { position: absolute; left: 50%; top: 190px; transform: translateX(-50%); font-size: 96px; }
+  #name .input-win { left: 50%; top: 330px; transform: translateX(-50%); width: 460px; text-align: center; }
+  #name input {
+    width: 100%; font: inherit; font-size: 36px; text-align: center;
+    background: transparent; color: var(--text); border: none; border-bottom: 3px dashed #888;
+    outline: none; padding: 4px; caret-color: var(--accent);
+  }
+  #name .hint { font-size: 16px; color: #aaa; margin-top: 8px; }
+  #name .err { font-size: 18px; color: var(--danger); height: 24px; margin-top: 4px; }
+  #name .ok-btn { left: 50%; top: 500px; transform: translateX(-50%); width: 220px; text-align: center; cursor: pointer; }
+  #name .ok-btn:hover { background: rgba(60,64,140,.95); }
+
+  /* ---- ステータス（名前（年齢）） ---- */
+  .status { left: 16px; top: 16px; padding: 8px 18px; font-size: 22px; z-index: 5; }
+  .status .age { color: var(--accent); }
+
+  /* ---- 茶番 ---- */
+  .actor { position: absolute; bottom: 210px; font-size: 110px; transition: transform .3s, font-size .4s; }
+  #actor-player { left: 170px; }
+  #actor-guide  { right: 170px; transform: scaleX(-1); }
+  #actor-player.grown { font-size: 150px; }
+  .msg { left: 16px; right: 16px; bottom: 16px; height: 176px; }
+  .msg .speaker {
+    position: absolute; top: -22px; left: 18px; padding: 0 14px; font-size: 20px;
+    background: #000; border: 2px solid #fff; border-radius: 6px; color: var(--accent);
+  }
+  .msg .speaker:empty { display: none; }
+  .msg .next { position: absolute; right: 18px; bottom: 8px; color: var(--accent); animation: bounce .6s infinite; display: none; }
+  .msg .next.show { display: block; }
+  @keyframes bounce { 50% { transform: translateY(4px); } }
+  .skip-hint { position: absolute; right: 20px; top: 24px; font-size: 14px; color: #888; }
+
+  /* 変身時のフラッシュ */
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 4; }
+  #flash.on { animation: flash .5s ease-out; }
+  @keyframes flash { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+
+  /* ---- 体験選択 ---- */
+  #select .header { left: 50%; top: 16px; transform: translateX(-50%); padding: 8px 28px; font-size: 24px; color: var(--accent); }
+  #select .grid {
+    position: absolute; left: 40px; right: 40px; top: 96px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .spot {
+    position: relative; height: 150px; cursor: pointer;
+    background: var(--win-bg); border: 3px solid #666; border-radius: 8px;
+    box-shadow: 0 0 0 2px #000;
+    display: flex; align-items: center; gap: 18px; padding: 0 22px;
+    transition: transform .1s;
+  }
+  .spot .icon { font-size: 64px; }
+  .spot .name { font-size: 30px; }
+  .spot .tag { font-size: 16px; color: #aaa; }
+  .spot.selected { border-color: var(--accent); transform: scale(1.03); box-shadow: 0 0 0 2px #000, 0 0 18px rgba(255,211,77,.6); }
+  .spot.selected::before { content: "▶"; position: absolute; left: -26px; color: var(--accent); font-size: 24px; animation: blink-x .6s steps(2) infinite; }
+  #select .desc { left: 16px; right: 16px; bottom: 16px; height: 112px; font-size: 21px; }
+
+  /* 確認ダイアログ */
+  .confirm { right: 40px; bottom: 140px; width: 200px; z-index: 6; display: none; }
+  .confirm.show { display: block; }
+
+  /* フェード */
+  #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .5s; z-index: 10; }
+  #fade.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- 1. タイトル -->
+  <section class="scene" id="title">
+    <div class="bg-town"></div>
+    <div class="logo">
+      <h1>タイトルを入力</h1>
+      <div class="catch">〜 ちょっぴり悪いこともしよう 〜</div>
+    </div>
+    <div class="window menu" id="title-menu">
+      <div class="choice selected">はじめから</div>
+      <div class="choice">つづきから</div>
+    </div>
+    <div class="press">↑↓ / Enter ・ クリックでも そうさ できます</div>
+  </section>
+
+  <!-- 2. 名前入力 -->
+  <section class="scene" id="name">
+    <div class="bg-town"></div>
+    <div class="window prompt">キミの なまえを おしえてね。</div>
+    <div class="face">👦</div>
+    <div class="window input-win">
+      <input id="name-input" maxlength="6" autocomplete="off" spellcheck="false" placeholder="なまえ">
+      <div class="hint">6もじ まで ・ Enter で けってい</div>
+      <div class="err" id="name-err"></div>
+    </div>
+    <div class="window ok-btn" id="name-ok">けってい</div>
+  </section>
+
+  <!-- 3. 茶番 -->
+  <section class="scene" id="story">
+    <div class="bg-town"></div>
+    <div class="window status"><span class="pname"></span>（<span class="age"></span>）</div>
+    <div class="skip-hint">Esc: スキップ</div>
+    <div class="actor" id="actor-player">👦</div>
+    <div class="actor" id="actor-guide">🦹</div>
+    <div id="flash"></div>
+    <div class="window msg">
+      <div class="speaker" id="speaker"></div>
+      <div id="msg-text"></div>
+      <div class="next" id="msg-next">▼</div>
+    </div>
+  </section>
+
+  <!-- 4. 体験選択 -->
+  <section class="scene" id="select">
+    <div class="bg-town"></div>
+    <div class="window status"><span class="pname"></span>（<span class="age"></span>）</div>
+    <div class="window header">どこへ 行こう？</div>
+    <div class="grid" id="spot-grid"></div>
+    <div class="window desc" id="spot-desc"></div>
+    <div class="window confirm" id="confirm">
+      <div class="choice selected">はい</div>
+      <div class="choice">いいえ</div>
+    </div>
+  </section>
+
+  <div id="fade"></div>
+</div>
+
+<script>
+/* =========================================================
+   設定：各シミュレーションの遷移先はここを書き換えるだけ
+   url を空にすると「じゅんびちゅう」と表示されます。
+   遷移時に ?name=〇〇&age=20 を付けて渡します。
+   ========================================================= */
+const CONFIG = {
+  storageKey: "yaminia_player",
+  simulations: [
+    { id: "keiba",   icon: "🐎", name: "競馬場", tag: "競馬",   url: "./games/horse-racing/index.html",
+      desc: "夢と 期待が 走る 場所。\n…賭けた お金は 戻って こないかも しれない。" },
+    { id: "slot",    icon: "🎰", name: "カジノ",   tag: "スロット", url: "./games/slot/index.html",
+      desc: "ピカピカ 光る 機械が 待っている。\n「次こそ 当たる」…本当に？" },
+    { id: "sake",    icon: "🍺", name: "居酒屋",     tag: "お酒",   url: "",
+      desc: "大人たちが 乾杯 している。\n飲みすぎには ご注意 を。" },
+    { id: "tabako",  icon: "🚬", name: "喫煙所", tag: "タバコ", url: "./games/cigarette/index.html",
+      desc: "煙の 向こうで 誰かが 溜め息を ついている。\n一本 だけ…の つもりが？" },
+  ],
+};
+
+const STORY = [
+  { text: "（ ここは よるの まち…… ）" },
+  { speaker: "{name}", text: "あれ？ ママ どこ……？ まいごに なっちゃった……" },
+  { speaker: "あやしい おんな", text: "ククク……ようこそ、ちいさな おきゃくさま。" },
+  { speaker: "あやしい おんな", text: "ここは『タイトルを入力』。\nオトナの しごと…いや『オトナの あそび』を たいけん できる まちさ。" },
+  { speaker: "{name}", text: "たいけん したい！ でも ぼく まだ 5さい だよ？" },
+  { speaker: "あやしい おんな", text: "しんぱい いらない。すぐに オトナに してあげよう。" },
+  { speaker: "あやしい おんな", text: "くらえッ！！ セイジン ビーーーーム！！！" },
+  { action: "beam" },
+  { text: "（ {name}は 20歳に なった！ ）" },
+  { speaker: "{name}", text: "か、体が…… 大きく なってる！？\n声も 低い！！" },
+  { speaker: "怪しい 女", text: "これで キミも りっぱな 大人。\nさあ、好きな ところへ 行くがいい。" },
+  { speaker: "怪しい 女", text: "ただし…… 大人の 世界には\n『代償』が つきもの だがね。ククク……" },
+];
+
+/* ---------------- 状態 ---------------- */
+const player = { name: "", age: 5 };
+let current = null;          // 現在のシーン名
+const scenes = {};           // シーンごとのハンドラ
+
+function loadPlayer() {
+  try { return JSON.parse(localStorage.getItem(CONFIG.storageKey)); } catch { return null; }
+}
+function savePlayer() {
+  try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(player)); } catch {}
+}
+function updateStatus() {
+  document.querySelectorAll(".pname").forEach(el => el.textContent = player.name);
+  document.querySelectorAll(".status .age").forEach(el => el.textContent = player.age);
+}
+
+/* ---------------- シーン管理 ---------------- */
+const fade = document.getElementById("fade");
+const wait = ms => new Promise(r => setTimeout(r, ms));
+let transitioning = false;
+async function goto(name, withFade = true) {
+  if (transitioning) return;
+  transitioning = true;
+  if (withFade) { fade.classList.add("on"); await wait(500); }
+  document.querySelectorAll(".scene").forEach(s => s.classList.toggle("active", s.id === name));
+  current = name;
+  updateStatus();
+  scenes[name].enter?.();
+  if (withFade) fade.classList.remove("on");
+  transitioning = false;
+}
+document.addEventListener("keydown", e => { if (!transitioning) scenes[current]?.key?.(e); });
+
+/* 汎用：縦並びの選択肢 */
+function makeMenu(container, onDecide) {
+  const items = [...container.querySelectorAll(".choice")];
+  const m = {
+    index: 0,
+    set(i) {
+      m.index = (i + items.length) % items.length;
+      items.forEach((el, k) => el.classList.toggle("selected", k === m.index));
+    },
+    key(e) {
+      if (e.key === "ArrowUp")   { m.set(m.index - 1); }
+      if (e.key === "ArrowDown") { m.set(m.index + 1); }
+      if (e.key === "Enter" || e.key === " " || e.key === "z") onDecide(m.index);
+    },
+  };
+  items.forEach((el, k) => {
+    el.addEventListener("mouseenter", () => { if (m.index !== k) { m.set(k); } });
+    el.addEventListener("click", () => { m.set(k); onDecide(k); });
+  });
+  return m;
+}
+
+/* ===== 1. タイトル ===== */
+const titleMenu = makeMenu(document.getElementById("title-menu"), i => {
+  if (i === 0) { goto("name"); }
+  else {
+    const saved = loadPlayer();
+    if (saved?.name) { Object.assign(player, saved); goto("select"); }
+  }
+});
+scenes.title = { enter() { titleMenu.set(0); }, key: e => titleMenu.key(e) };
+
+/* ===== 2. 名前入力 ===== */
+const nameInput = document.getElementById("name-input");
+const nameErr = document.getElementById("name-err");
+function decideName() {
+  const v = nameInput.value.trim();
+  if (!v) { nameErr.textContent = "なまえを いれてね！"; return; }
+  player.name = v; player.age = 5;
+  goto("story");
+}
+document.getElementById("name-ok").addEventListener("click", decideName);
+scenes.name = {
+  enter() { nameInput.value = ""; nameErr.textContent = ""; setTimeout(() => nameInput.focus(), 50); },
+  key(e) {
+    if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); decideName(); }
+    else nameErr.textContent = "";
+  },
+};
+
+/* ===== 3. 茶番 ===== */
+const msgText = document.getElementById("msg-text");
+const msgNext = document.getElementById("msg-next");
+const speakerEl = document.getElementById("speaker");
+const actorPlayer = document.getElementById("actor-player");
+const game = document.getElementById("game");
+const story = { step: 0, typing: false, full: "", timer: null, busy: false };
+
+function fill(s) { return (s || "").replaceAll("{name}", player.name); }
+
+function typeText(text) {
+  clearInterval(story.timer);
+  story.full = text; story.typing = true;
+  msgText.textContent = ""; msgNext.classList.remove("show");
+  let i = 0;
+  story.timer = setInterval(() => {
+    msgText.textContent = text.slice(0, ++i);
+    if (i >= text.length) finishTyping();
+  }, 40);
+}
+function finishTyping() {
+  clearInterval(story.timer);
+  msgText.textContent = story.full; story.typing = false;
+  msgNext.classList.add("show");
+}
+
+async function playBeam() {
+  story.busy = true;
+  msgText.textContent = ""; speakerEl.textContent = ""; msgNext.classList.remove("show");
+  // 一瞬画面が光り、光っている間に20歳へ変化
+  const flash = document.getElementById("flash");
+  flash.classList.remove("on"); void flash.offsetWidth; flash.classList.add("on");
+  await wait(100);
+  player.age = 20; updateStatus();
+  actorPlayer.textContent = "🧑"; actorPlayer.classList.add("grown");
+  await wait(500);
+  flash.classList.remove("on");
+  savePlayer();
+  story.busy = false;
+  advance();
+}
+
+function advance() {
+  if (story.busy) return;
+  if (story.typing) { finishTyping(); return; }
+  const line = STORY[story.step++];
+  if (!line) { goto("select"); return; }
+  if (line.action === "beam") { playBeam(); return; }
+  speakerEl.textContent = fill(line.speaker);
+  typeText(fill(line.text));
+}
+function skipStory() {
+  if (story.busy) return;
+  clearInterval(story.timer);
+  player.age = 20; savePlayer();
+  goto("select");
+}
+document.querySelector("#story .msg").addEventListener("click", advance);
+document.querySelector("#story .bg-town").addEventListener("click", advance);
+scenes.story = {
+  enter() {
+    story.step = 0; story.busy = false;
+    player.age = 5; updateStatus();
+    actorPlayer.textContent = "👦"; actorPlayer.classList.remove("grown");
+    advance();
+  },
+  key(e) {
+    if (e.key === "Enter" || e.key === " " || e.key === "z") { e.preventDefault(); advance(); }
+    if (e.key === "Escape") skipStory();
+  },
+};
+
+/* ===== 4. 体験選択 ===== */
+const grid = document.getElementById("spot-grid");
+const descEl = document.getElementById("spot-desc");
+const confirmEl = document.getElementById("confirm");
+const sel = { index: 0, confirming: false };
+
+CONFIG.simulations.forEach((sim, i) => {
+  const el = document.createElement("div");
+  el.className = "spot";
+  el.innerHTML = `<div class="icon">${sim.icon}</div><div><div class="name">${sim.name}</div><div class="tag">${sim.tag}</div></div>`;
+  el.addEventListener("mouseenter", () => { if (!sel.confirming && sel.index !== i) { setSpot(i); } });
+  el.addEventListener("click", () => { if (!sel.confirming) { setSpot(i); openConfirm(); } });
+  grid.appendChild(el);
+});
+const spots = [...grid.children];
+
+function setSpot(i) {
+  const n = spots.length;
+  sel.index = (i + n) % n;
+  spots.forEach((el, k) => el.classList.toggle("selected", k === sel.index));
+  descEl.innerText = CONFIG.simulations[sel.index].desc;
+}
+function openConfirm() {
+  const sim = CONFIG.simulations[sel.index];
+  if (!sim.url) { descEl.innerText = `${sim.name}は まだ 準備中らしい……`; return; }
+  sel.confirming = true;
+  descEl.innerText = `${sim.name}へ 行こうか？`;
+  confirmMenu.set(0);
+  confirmEl.classList.add("show");
+}
+function closeConfirm() {
+  sel.confirming = false; confirmEl.classList.remove("show"); setSpot(sel.index);
+}
+const confirmMenu = makeMenu(confirmEl, async i => {
+  if (!sel.confirming) return;
+  if (i === 1) { closeConfirm(); return; }
+  savePlayer();
+  const sim = CONFIG.simulations[sel.index];
+  const url = new URL(sim.url, location.href);
+  url.searchParams.set("name", player.name);
+  url.searchParams.set("age", player.age);
+  fade.classList.add("on");
+  await wait(600);
+  location.href = url.toString();
+});
+
+scenes.select = {
+  enter() { closeConfirm(); setSpot(sel.index); },
+  key(e) {
+    if (sel.confirming) {
+      if (e.key === "Escape" || e.key === "x") closeConfirm();
+      else confirmMenu.key(e);
+      return;
+    }
+    const cols = 2;
+    const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols };
+    if (moves[e.key] !== undefined) { setSpot(sel.index + moves[e.key]); }
+    if (e.key === "Enter" || e.key === " " || e.key === "z") openConfirm();
+  },
+};
+
+/* ---------------- 画面フィット ---------------- */
+function fit() {
+  const s = Math.min(innerWidth / 816, innerHeight / 624);
+  game.style.transform = `scale(${s})`;
+}
+addEventListener("resize", fit); fit();
+
+/* ---------------- 起動 ----------------
+   シミュレーションから戻るときは index.html?scene=select へ遷移すれば
+   保存済みのプレイヤー情報で選択画面から再開できます。 */
+const params = new URLSearchParams(location.search);
+const saved = loadPlayer();
+if (params.get("scene") === "select" && saved?.name) {
+  Object.assign(player, saved);
+  goto("select", false);
+} else {
+  goto("title", false);
+}
+</script>
+</body>
+</html>
